@@ -12,7 +12,8 @@
     "api"
   ],
   "engines": {
-    "node": "8.10.0"
+    "node": "8.10.0",
+    "npm": "4.6.0"
   },
   "author": "Vasitha K Abeysinghe",
   "license": "ISC",
