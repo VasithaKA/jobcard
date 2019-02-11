@@ -11,6 +11,9 @@
     "restful",
     "api"
   ],
+  "engines": {
+    "node": "8.10.0"
+  },
   "author": "Vasitha K Abeysinghe",
   "license": "ISC",
   "dependencies": {
