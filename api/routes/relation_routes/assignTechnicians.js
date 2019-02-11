@@ -70,7 +70,6 @@ router.get('/job/:jobId', async (req, res) => {
 //pending jobs
 router.get('/pending/', async (req, res) => {
     const allJobs = await Job.find({}, { _id: 1 })
-
     var pendingJobs = [];
     for (let i = 0; i < allJobs.length; i++) {
         const assignTechnicians = await AssignTechnician.findOne({ jobId: allJobs[i]._id })
@@ -94,6 +93,8 @@ router.get('/pending/', async (req, res) => {
         pendingJobs: faultsInAJobs
     })
 })
+
+
 
 //get job details of a machine without uning an array
 router.get('/jobs/:technicianId/:year', function (req, res) {

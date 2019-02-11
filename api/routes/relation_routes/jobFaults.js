@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const moment = require('moment');
 
 require('../../models/relationships/JobFault');
 const JobFault = mongoose.model('jobFaults');
@@ -66,23 +67,30 @@ router.get('/availableTechnician/:jobId', async (req, res) => {
     const faultCategoryInAjob = await JobFault.findOne({jobId: req.params.jobId}).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
     const expertiseTechnicians = await Expertise.find({faultCategoryId: faultCategoryInAjob.faultId.faultCategoryId._id},{technicianId:1, _id:0}).populate('technicianId')
     var availableTechnician = [];
+    var start = moment().startOf('day');
+    var end = moment().endOf('day');
     for (let i = 0; i < expertiseTechnicians.length; i++) {
-        await Attend.findOne({technicianId: expertiseTechnicians.technicianId._id},{technicianId:1, _id:0})
+        await Attend.findOne({technicianId: expertiseTechnicians[i].technicianId._id, date: {$gte: start, $lt: end}},{technicianId:1, _id:0})
+        
         .then((attendTechnician) => {
-            Solve.find({technicianId: attendTechnician.technicianId},{status:1, _id:0})
-            .then((Status) => {
-                var count = 0;
-                for (let j = 0; j < Status.length; j++) {
-                    if (Satus.status == "incomplete") {
-                        count = count + 1;
+            if (attendTechnician) {
+                Solve.find({technicianId: attendTechnician.technicianId},{status:1, _id:0})
+                .then((Status) => {
+                    var count = 0;
+                    for (let j = 0; j < Status.length; j++) {
+                        if (Status[j].status == "incomplete") {
+                            count = count + 1;
+                        }
                     }
-                }
-                if (count>0) {
-                    count = 0;
-                } else {
-                    availableTechnician.push(expertiseTechnicians[i])
-                }
-            })
+                    if (count>0) {
+                        count = 0;
+                    } else {
+                        availableTechnician.push(expertiseTechnicians[i])
+                    }
+                })
+            } else {
+                return
+            }
         })
     }
     res.json({
