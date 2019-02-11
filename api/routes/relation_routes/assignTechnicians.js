@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const moment = require('moment');
 
 require('../../models/relationships/AssignTechnician');
 const AssignTechnician = mongoose.model('assignTechnicians');
@@ -25,7 +26,7 @@ router.post('/', async (req, res) => {
     const assignTechnician = new AssignTechnician({
         jobId: req.body.jobId,
         technicianId: req.body.technicianId,
-        date: Date.now()
+        date: moment().format()
     })
     await assignTechnician.save()
         .then(() => res.json({
@@ -76,7 +77,7 @@ router.get('/notAccept', async (req, res) => {
 })
 
 //pending jobs
-router.get('/pending/', async (req, res) => {
+router.get('/pending', async (req, res) => {
     const allJobs = await Job.find({}, { _id: 1 })
     var pendingJobs = [];
     for (let i = 0; i < allJobs.length; i++) {

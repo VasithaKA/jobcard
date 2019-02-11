@@ -9,6 +9,9 @@ const Solve = mongoose.model('solves');
 require('../../models/relationships/JobFault');
 const JobFault = mongoose.model('jobFaults');
 
+require('../../models/Job');
+const Job = mongoose.model('jobs');
+
 //set Job Fault
 router.post('/', async (req, res) => {
     const existingJobFault = await Solve.findOne({ jobId: req.body.jobId, technicianId: req.body.technicianId })
@@ -23,7 +26,7 @@ router.post('/', async (req, res) => {
     const solve = new Solve({
         jobId: req.body.jobId,
         technicianId: req.body.technicianId,
-        startTime: Date.now(),
+        startTime: moment().format(),
         endTime: req.body.endtTime,
         year: req.body.year,
         month:req.body.month,
@@ -63,18 +66,20 @@ router.get('/complete', async (req, res) => {
 
 //get today completed Jobs 
 router.get('/todayComplete', async (req, res) => {
-    const completedJobs = await Solve.find({status:"complete"},{jobId:1, _id:0})
     var start = moment().startOf('day');
     var end = moment().endOf('day');
-    for (let j = 0; j < completedJobs.length; j++) {
-        const faultsInAJob = await JobFault.find({jobId: completedJobs[j].jobId, date: {$gte: start, $lt: end}}).populate({ path: 'jobId', populate: { path: 'machineId', populate: { path: 'departmentId' } } }).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
-        var faultsInAJobs = []
-        for (let i = 0; i < faultsInAJob.length; i++) {
-            faultsInAJobs.push( { _id:faultsInAJob[i].jobId._id, jobId: faultsInAJob[i].jobId.jobId, date: faultsInAJob[i].jobId.date, description: faultsInAJob[i].jobId.description, faultImage: faultsInAJob[i].jobId.faultImage,serialNumber: faultsInAJob[i].jobId.machineId.serialNumber, departmentName: faultsInAJob[i].jobId.machineId.departmentId.departmentName, faultName:faultsInAJob[i].faultId.faultName, faultCategoryName:faultsInAJob[i].faultId.faultCategoryId.faultCategoryName} )
+    const todayJobs = await Job.find({date: {$gte: start, $lt: end}},{_id:1})
+
+    var faultsInAJobs = []
+    for (let i = 0; i < todayJobs.length; i++) {
+        const completedJobsToday = await Solve.findOne({jobId: todayJobs[i]._id, status:"complete"},{jobId:1,_id:0})
+        if (completedJobsToday) {
+        const faultDetails = await JobFault.findOne({jobId: completedJobsToday.jobId}).populate({ path: 'jobId', populate: { path: 'machineId', populate: { path: 'departmentId' } } }).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
+            faultsInAJobs.push(faultDetails)
         }
     }
     res.json({
-        completedJobsDetails: faultsInAJobs
+        todayCompletedJobsDetails: faultsInAJobs
     })
 })
 
@@ -95,18 +100,20 @@ router.get('/incomplete', async (req, res) => {
 
 //get today incompleted Jobs 
 router.get('/todayIncomplete', async (req, res) => {
-    const completedJobs = await Solve.find({status:"incomplete"},{jobId:1, _id:0})
     var start = moment().startOf('day');
     var end = moment().endOf('day');
-    for (let j = 0; j < completedJobs.length; j++) {
-        const faultsInAJob = await JobFault.find({jobId: completedJobs[j].jobId, date: {$gte: start, $lt: end}}).populate({ path: 'jobId', populate: { path: 'machineId', populate: { path: 'departmentId' } } }).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
-        var faultsInAJobs = []
-        for (let i = 0; i < faultsInAJob.length; i++) {
-            faultsInAJobs.push( { _id:faultsInAJob[i].jobId._id, jobId: faultsInAJob[i].jobId.jobId, date: faultsInAJob[i].jobId.date, description: faultsInAJob[i].jobId.description, faultImage: faultsInAJob[i].jobId.faultImage,serialNumber: faultsInAJob[i].jobId.machineId.serialNumber, departmentName: faultsInAJob[i].jobId.machineId.departmentId.departmentName, faultName:faultsInAJob[i].faultId.faultName, faultCategoryName:faultsInAJob[i].faultId.faultCategoryId.faultCategoryName} )
+    const todayJobs = await Job.find({date: {$gte: start, $lt: end}},{_id:1})
+
+    var faultsInAJobs = []
+    for (let i = 0; i < todayJobs.length; i++) {
+        const completedJobsToday = await Solve.findOne({jobId: todayJobs[i]._id, status:"complete"},{jobId:1,_id:0})
+        if (completedJobsToday) {
+        const faultDetails = await JobFault.findOne({jobId: completedJobsToday.jobId}).populate({ path: 'jobId', populate: { path: 'machineId', populate: { path: 'departmentId' } } }).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
+            faultsInAJobs.push(faultDetails)
         }
     }
     res.json({
-        completedJobsDetails: faultsInAJobs
+        todayIncompletedJobsDetails: faultsInAJobs
     })
 })
 
