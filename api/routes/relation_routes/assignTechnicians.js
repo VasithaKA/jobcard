@@ -12,6 +12,9 @@ const Job = mongoose.model('jobs');
 require('../../models/relationships/JobFault');
 const JobFault = mongoose.model('jobFaults');
 
+require('../../models/relationships/Solve');
+const Solve = mongoose.model('solves');
+
 //set Assign Technician
 router.post('/', async (req, res) => {
     const existingAssignTechnician = await AssignTechnician.findOne({ jobId: req.body.jobId, technicianId: req.body.technicianId })
@@ -39,11 +42,23 @@ router.post('/', async (req, res) => {
 //accept the job
 router.post('/accept', async (req, res) => {
     await AssignTechnician.findOneAndUpdate({ jobId: req.body.jobId }, { $set: { accept: req.body.accept } })
-        .then(() => {
-            res.json({
-                success: true
-            })
+    .then(() => {
+        const solve = new Solve({
+            jobId: req.body.jobId,
+            technicianId: req.body.technicianId,
+            startTime: moment().format(),
+            endTime: req.body.endtTime,
+            year: moment().format('YYYY'),
+            month: moment().format('MM'),
+            mark: req.body.mark
         })
+        solve.save()
+        .then(() => res.json({
+            success: true,
+            message: "Set job!"
+        })
+        )
+    })
 })
 
 //get Assign job Details

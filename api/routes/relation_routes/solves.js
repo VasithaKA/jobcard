@@ -28,9 +28,8 @@ router.post('/', async (req, res) => {
         technicianId: req.body.technicianId,
         startTime: moment().format(),
         endTime: req.body.endtTime,
-        year: req.body.year,
-        month:req.body.month,
-        status: req.body.status,
+        year: moment().format('YYYY'),
+        month: moment().format('MM'),
         mark: req.body.mark
     })
     await solve.save()
@@ -48,6 +47,16 @@ router.post('/', async (req, res) => {
 //         completedJobs: completedJobs
 //     })
 // })
+
+//complete the job
+router.patch('/setComplete/:jobId', async (req, res) => {
+    await Solve.findOneAndUpdate({ jobId: req.params.jobId }, { $set: { status: "complete" } })
+        .then(() => {
+            res.json({
+                success: "success"
+            })
+        })
+})
 
 //get completed Jobs 
 router.get('/complete', async (req, res) => {
