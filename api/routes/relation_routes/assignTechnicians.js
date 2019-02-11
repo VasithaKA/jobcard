@@ -35,8 +35,8 @@ router.post('/', async (req, res) => {
         )
 })
 
-//accept
-router.post('/accept/', async (req, res) => {
+//accept the job
+router.post('/accept', async (req, res) => {
     await AssignTechnician.findOneAndUpdate({ jobId: req.body.jobId }, { $set: { accept: req.body.accept } })
         .then(() => {
             res.json({
@@ -45,7 +45,7 @@ router.post('/accept/', async (req, res) => {
         })
 })
 
-//get Assign Technician Details
+//get Assign job Details
 router.get('/technician/:technicianId', async (req, res) => {
     const assignTechnicianJobs = await AssignTechnician.find({ technicianId: req.params.technicianId }).populate('jobId')
     res.json({
@@ -65,6 +65,14 @@ router.get('/job/:jobId', async (req, res) => {
             status: "Pending"
         })
     }
+})
+
+//Not accept job
+router.get('/notAccept', async (req, res) => {
+    const notAcceptJobs = await AssignTechnician.find({ accept: false }).populate('technicianId').populate('jobId')
+    res.json({
+        notAcceptJobs
+    })
 })
 
 //pending jobs

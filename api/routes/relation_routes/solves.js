@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const moment = require('moment');
 
 require('../../models/relationships/Solve');
 const Solve = mongoose.model('solves');
@@ -46,7 +47,7 @@ router.post('/', async (req, res) => {
 // })
 
 //get completed Jobs 
-router.get('/complete/', async (req, res) => {
+router.get('/complete', async (req, res) => {
     const completedJobs = await Solve.find({status:"complete"},{jobId:1, _id:0})
     for (let j = 0; j < completedJobs.length; j++) {
         const faultsInAJob = await JobFault.find({jobId: completedJobs[j].jobId}).populate({ path: 'jobId', populate: { path: 'machineId', populate: { path: 'departmentId' } } }).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
@@ -60,8 +61,25 @@ router.get('/complete/', async (req, res) => {
     })
 })
 
+//get today completed Jobs 
+router.get('/todayComplete', async (req, res) => {
+    const completedJobs = await Solve.find({status:"complete"},{jobId:1, _id:0})
+    var start = moment().startOf('day');
+    var end = moment().endOf('day');
+    for (let j = 0; j < completedJobs.length; j++) {
+        const faultsInAJob = await JobFault.find({jobId: completedJobs[j].jobId, date: {$gte: start, $lt: end}}).populate({ path: 'jobId', populate: { path: 'machineId', populate: { path: 'departmentId' } } }).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
+        var faultsInAJobs = []
+        for (let i = 0; i < faultsInAJob.length; i++) {
+            faultsInAJobs.push( { _id:faultsInAJob[i].jobId._id, jobId: faultsInAJob[i].jobId.jobId, date: faultsInAJob[i].jobId.date, description: faultsInAJob[i].jobId.description, faultImage: faultsInAJob[i].jobId.faultImage,serialNumber: faultsInAJob[i].jobId.machineId.serialNumber, departmentName: faultsInAJob[i].jobId.machineId.departmentId.departmentName, faultName:faultsInAJob[i].faultId.faultName, faultCategoryName:faultsInAJob[i].faultId.faultCategoryId.faultCategoryName} )
+        }
+    }
+    res.json({
+        completedJobsDetails: faultsInAJobs
+    })
+})
+
 //get incompleted Jobs 
-router.get('/incomplete/', async (req, res) => {
+router.get('/incomplete', async (req, res) => {
     const completedJobs = await Solve.find({status:"incomplete"},{jobId:1, _id:0})
     for (let j = 0; j < completedJobs.length; j++) {
         const faultsInAJob = await JobFault.find({jobId: completedJobs[j].jobId}).populate({ path: 'jobId', populate: { path: 'machineId', populate: { path: 'departmentId' } } }).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
@@ -74,6 +92,24 @@ router.get('/incomplete/', async (req, res) => {
         completedJobsDetails: faultsInAJobs
     })
 })
+
+//get today incompleted Jobs 
+router.get('/todayIncomplete', async (req, res) => {
+    const completedJobs = await Solve.find({status:"incomplete"},{jobId:1, _id:0})
+    var start = moment().startOf('day');
+    var end = moment().endOf('day');
+    for (let j = 0; j < completedJobs.length; j++) {
+        const faultsInAJob = await JobFault.find({jobId: completedJobs[j].jobId, date: {$gte: start, $lt: end}}).populate({ path: 'jobId', populate: { path: 'machineId', populate: { path: 'departmentId' } } }).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
+        var faultsInAJobs = []
+        for (let i = 0; i < faultsInAJob.length; i++) {
+            faultsInAJobs.push( { _id:faultsInAJob[i].jobId._id, jobId: faultsInAJob[i].jobId.jobId, date: faultsInAJob[i].jobId.date, description: faultsInAJob[i].jobId.description, faultImage: faultsInAJob[i].jobId.faultImage,serialNumber: faultsInAJob[i].jobId.machineId.serialNumber, departmentName: faultsInAJob[i].jobId.machineId.departmentId.departmentName, faultName:faultsInAJob[i].faultId.faultName, faultCategoryName:faultsInAJob[i].faultId.faultCategoryId.faultCategoryName} )
+        }
+    }
+    res.json({
+        completedJobsDetails: faultsInAJobs
+    })
+})
+
 
 
   //get job details of a machine without uning an array
