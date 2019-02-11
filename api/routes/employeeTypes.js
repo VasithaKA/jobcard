@@ -44,7 +44,7 @@ router.post('/', async (req, res) => {
     })
     await employeeType.save()
 
-    const employeeTypeId = await EmployeeType.findOne({ employeeTypeName: req.body.employeeTypeName })
+    const employeeTypeId = await EmployeeType.findOne({ employeeTypeName: req.body.employeeTypeName },{_id:1})
     console.log(employeeTypeId)
     const roles = await Role.find()
     for (let i = 0; i < roles.length; i++) {
@@ -121,11 +121,9 @@ router.delete('/:_id', async (req, res) => {
         return
     } else {
         const employeeRole = await EmployeeRole.find({ employeeTypeId: req.params._id })
-        if (employeeRole) {
             for (let i = 0; i < employeeRole.length; i++) {
-                EmployeeRole.findOneAndDelete({ roleId: employeeRole[i].roleId })
+                await EmployeeRole.findOneAndDelete({ roleId: employeeRole[i].roleId })
             }
-        }
         await EmployeeType.findByIdAndDelete(req.params._id)
             .then(() => {
                 res.json({

@@ -7,6 +7,9 @@ const bcrypt = require('bcrypt');
 require('../models/Employee');
 const Employee = mongoose.model('employees');
 
+require('../models/relationships/Expertise');
+const Expertise = mongoose.model('expertises');
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, './profile_pictures/')
@@ -31,7 +34,7 @@ router.post('/', upload.single('profilePicture'), async (req, res) => {
     const existingemployeeId = await Employee.findOne({ employeeId: req.body.employeeId })
     const existingUserName = await Employee.findOne({ userName: req.body.userName })
 
-    if (existingemployeeId && existingUserName) {
+    if (existingemployeeId || existingUserName) {
         res.json({
             success: false,
             message: "User Name or Employee Id already in use. Please enter another one"
@@ -40,7 +43,7 @@ router.post('/', upload.single('profilePicture'), async (req, res) => {
     }
 
     if (req.file) {
-        bcrypt.hash(req.body.password, 12, (err, hash) => {
+        await bcrypt.hash(req.body.password, 12, (err, hash) => {
             const employee = new Employee({
                 employeeId: req.body.employeeId,
                 firstName: req.body.firstName,
@@ -49,18 +52,24 @@ router.post('/', upload.single('profilePicture'), async (req, res) => {
                 password: hash,
                 employeeTypeId: req.body.employeeTypeId,
                 departmentId: req.body.departmentId,
-                profilePicture: req.file.path,
-                expertiseId: req.body.faultCategoryId
+                profilePicture: req.file.path
+            })
+            employee.save().then((thisUser) => {
+                Employee.findOne({ employeeId: req.body.employeeId })
+                if (req.body.faultCategoryId != null) {
+                    for (let i = 0; i < req.body.faultCategoryId.length; i++) {
+                        const expertise = new Expertise({
+                            faultCategoryId: req.body.faultCategoryId[i],
+                            technicianId: thisUser._id
+                        })
+                        expertise.save()
+                    }
+                }
             })
 
-            employee.save()
-            res.json({
-                success: true,
-                message: "Employee is Registered!"
-            })
         })
     } else {
-        bcrypt.hash(req.body.password, 12, (err, hash) => {
+        await bcrypt.hash(req.body.password, 12, (err, hash) => {
             const employee = new Employee({
                 employeeId: req.body.employeeId,
                 firstName: req.body.firstName,
@@ -68,17 +77,39 @@ router.post('/', upload.single('profilePicture'), async (req, res) => {
                 userName: req.body.userName,
                 password: hash,
                 employeeTypeId: req.body.employeeTypeId,
-                departmentId: req.body.departmentId,
-                expertiseId: req.body.faultCategoryId
+                departmentId: req.body.departmentId
             })
-
-            employee.save()
-            res.json({
-                success: true,
-                message: "Employee is Registered!"
+            employee.save().then((thisUser) => {
+                Employee.findOne({ employeeId: req.body.employeeId })
+                if (req.body.faultCategoryId != null) {
+                    for (let i = 0; i < req.body.faultCategoryId.length; i++) {
+                        const expertise = new Expertise({
+                            faultCategoryId: req.body.faultCategoryId[i],
+                            technicianId: thisUser._id
+                        })
+                        expertise.save()
+                    }
+                }
             })
         })
     }
+
+
+    // if (req.body.faultCategoryId != null) {
+    //     for (let i = 0; i < req.body.faultCategoryId.length; i++) {
+    //         const expertise = new Expertise({
+    //             faultCategoryId: req.body.faultCategoryId[i],
+    //             technicianId: thisUser._id
+    //         })
+    //         await expertise.save()
+    //     }
+    // }
+    res.json({
+        success: true,
+        message: "Employee is Registered!"
+    })
+
+
 })
 
 //Edit user details
@@ -147,13 +178,13 @@ router.patch('/:_id', upload.single('profilePicture'), async (req, res) => {
 
 })
 
-//Delete account
-router.delete('/:_id', async (req, res) => {
+//Deactivate account
+router.put('/:_id', async (req, res) => {
     const findUserType = await Employee.findById(req.params._id).populate('employeeTypeId', 'employeeTypeName')
     if (findUserType.employeeTypeId.employeeTypeName == 'Administrator') {
         const admins = await Employee.find({ employeeTypeId: findUserType.employeeTypeId._id })
         if (admins.length > 1) {
-            await Employee.findByIdAndDelete(req.params._id)
+            await Employee.findByIdAndUpdate(req.params._id, { $set: { active: req.body.active } })
                 .then(() => {
                     res.json({
                         success: true
@@ -165,7 +196,7 @@ router.delete('/:_id', async (req, res) => {
             })
         }
     } else {
-        await Employee.findByIdAndDelete(req.params._id)
+        await Employee.findByIdAndUpdate(req.params._id, { $set: { active: req.body.active } })
             .then(() => {
                 res.json({
                     success: true
@@ -173,6 +204,33 @@ router.delete('/:_id', async (req, res) => {
             })
     }
 })
+
+//Delete account
+// router.delete('/:_id', async (req, res) => {
+//     const findUserType = await Employee.findById(req.params._id).populate('employeeTypeId', 'employeeTypeName')
+//     if (findUserType.employeeTypeId.employeeTypeName == 'Administrator') {
+//         const admins = await Employee.find({ employeeTypeId: findUserType.employeeTypeId._id })
+//         if (admins.length > 1) {
+//             await Employee.findByIdAndDelete(req.params._id)
+//                 .then(() => {
+//                     res.json({
+//                         success: true
+//                     })
+//                 })
+//         } else {
+//             res.json({
+//                 success: false
+//             })
+//         }
+//     } else {
+//         await Employee.findByIdAndDelete(req.params._id)
+//             .then(() => {
+//                 res.json({
+//                     success: true
+//                 })
+//             })
+//     }
+// })
 
 //get one emloyee details
 router.get('/:_id', async (req, res) => {
@@ -222,43 +280,41 @@ router.get('/checkUserName/:userName', async (req, res) => {
 router.patch('/password/:_id', async (req, res) => {
     bcrypt.hash(req.body.password, 12, (err, hash) => {
         Employee.findByIdAndUpdate(req.params._id, { $set: { password: hash } })
-        .then(() => {
-            res.json({
-                success: true,
-                message: "Password is Change!"
+            .then(() => {
+                res.json({
+                    success: true,
+                    message: "Password is Change!"
+                })
             })
-        })
     })
 })
 
 
 
 //Get employees details without using an array
-router.get('/employeetype/:employeeTypeId', function(req, res) {
-    console.log('Get all employee types');
-    Employee.find({"employeeTypeId":req.params.employeeTypeId}) 
-    .exec(function(err,employees){
-        if(err){
-            console.log("Error");
-        } else {
-            res.json(employees);
-        }
-    });
-  });
+router.get('/employeetype/:employeeTypeId', function (req, res) {
+    Employee.find({ "employeeTypeId": req.params.employeeTypeId })
+        .exec(function (err, employees) {
+            if (err) {
+                console.log("Error");
+            } else {
+                res.json(employees);
+            }
+        });
+});
 
-    //get a machine details without array
-router.get('/employeetype/:employeeTypeId/:_id', function(req, res) {
-    console.log('Get a machine details');
-    Employee.findById(req.params._id) 
-    .populate('departmentId')
-    .exec(function(err,employee){
-        if(err){
-            console.log("Error");
-        } else {
-            res.json(employee);
-        }
-    });
-  });
+//get a machine details without array
+router.get('/employeetype/:employeeTypeId/:_id', function (req, res) {
+    Employee.findById(req.params._id)
+        .populate('departmentId')
+        .exec(function (err, employee) {
+            if (err) {
+                console.log("Error");
+            } else {
+                res.json(employee);
+            }
+        });
+});
 
 
 module.exports = router;

@@ -22,6 +22,14 @@ router.post('/', async (req, res) => {
         return
     }
 
+    if (resp.active === false) {
+        res.json({
+            success: false,
+            message: "Your Account has been Deactivated"
+        })
+        return
+    }
+
     const userRole = await EmployeeRole.find({ employeeTypeId: resp.employeeTypeId, status: true }).populate('roleId', 'roleNumber')
 
     bcrypt.compare(req.body.password, resp.password, (err, result) => {

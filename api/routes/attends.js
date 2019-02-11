@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const moment = require('moment');
 
 require('../models/Attend');
 const Attend = mongoose.model('attends');
@@ -8,7 +9,7 @@ const Attend = mongoose.model('attends');
 //add to Attend Technician
 router.post('/', async (req, res) => {
     const attend = new Attend({
-        date: req.body.date,
+        date: moment().format(),
         technicianId: req.body.technicianId
     })
     await attend.save()

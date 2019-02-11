@@ -38,7 +38,7 @@ router.post('/', async (req, res) => {
 })
 
 //get Faults In A Job
-router.get('/:jobId', async (req, res) => {
+router.get('/fault/:jobId', async (req, res) => {
     const faultsInAJob = await JobFault.find({jobId: req.params.jobId}).populate({ path: 'jobId', populate: { path: 'machineId', populate: { path: 'departmentId' } } }).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
     var faultsInAJobs = []
     for (let i = 0; i < faultsInAJob.length; i++) {
