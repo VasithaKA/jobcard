@@ -61,11 +61,13 @@ router.patch('/setComplete/:jobId', async (req, res) => {
 //get completed Jobs 
 router.get('/complete', async (req, res) => {
     const completedJobs = await Solve.find({status:"complete"},{jobId:1, _id:0})
-    for (let j = 0; j < completedJobs.length; j++) {
-        const faultsInAJob = await JobFault.find({jobId: completedJobs[j].jobId}).populate({ path: 'jobId', populate: { path: 'machineId', populate: { path: 'departmentId' } } }).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
-        var faultsInAJobs = []
-        for (let i = 0; i < faultsInAJob.length; i++) {
-            faultsInAJobs.push( { _id:faultsInAJob[i].jobId._id, jobId: faultsInAJob[i].jobId.jobId, date: faultsInAJob[i].jobId.date, description: faultsInAJob[i].jobId.description, faultImage: faultsInAJob[i].jobId.faultImage,serialNumber: faultsInAJob[i].jobId.machineId.serialNumber, departmentName: faultsInAJob[i].jobId.machineId.departmentId.departmentName, faultName:faultsInAJob[i].faultId.faultName, faultCategoryName:faultsInAJob[i].faultId.faultCategoryId.faultCategoryName} )
+    var faultsInAJobs = []
+    if (completedJobs) {
+        for (let j = 0; j < completedJobs.length; j++) {
+            const faultsInAJob = await JobFault.find({jobId: completedJobs[j].jobId}).populate({ path: 'jobId', populate: { path: 'machineId', populate: { path: 'departmentId' } } }).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
+            for (let i = 0; i < faultsInAJob.length; i++) {
+                faultsInAJobs.push( { _id:faultsInAJob[i].jobId._id, jobId: faultsInAJob[i].jobId.jobId, date: faultsInAJob[i].jobId.date, description: faultsInAJob[i].jobId.description, faultImage: faultsInAJob[i].jobId.faultImage,serialNumber: faultsInAJob[i].jobId.machineId.serialNumber, departmentName: faultsInAJob[i].jobId.machineId.departmentId.departmentName, faultName:faultsInAJob[i].faultId.faultName, faultCategoryName:faultsInAJob[i].faultId.faultCategoryId.faultCategoryName} )
+            }
         }
     }
     res.json({
@@ -78,7 +80,6 @@ router.get('/todayComplete', async (req, res) => {
     var start = moment().startOf('day');
     var end = moment().endOf('day');
     const todayJobs = await Job.find({date: {$gte: start, $lt: end}},{_id:1})
-
     var faultsInAJobs = []
     for (let i = 0; i < todayJobs.length; i++) {
         const completedJobsToday = await Solve.findOne({jobId: todayJobs[i]._id, status:"complete"},{jobId:1,_id:0})
@@ -94,12 +95,14 @@ router.get('/todayComplete', async (req, res) => {
 
 //get incompleted Jobs 
 router.get('/incomplete', async (req, res) => {
-    const completedJobs = await Solve.find({status:"incomplete"},{jobId:1, _id:0})
-    for (let j = 0; j < completedJobs.length; j++) {
-        const faultsInAJob = await JobFault.find({jobId: completedJobs[j].jobId}).populate({ path: 'jobId', populate: { path: 'machineId', populate: { path: 'departmentId' } } }).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
-        var faultsInAJobs = []
-        for (let i = 0; i < faultsInAJob.length; i++) {
-            faultsInAJobs.push( { _id:faultsInAJob[i].jobId._id, jobId: faultsInAJob[i].jobId.jobId, date: faultsInAJob[i].jobId.date, description: faultsInAJob[i].jobId.description, faultImage: faultsInAJob[i].jobId.faultImage,serialNumber: faultsInAJob[i].jobId.machineId.serialNumber, departmentName: faultsInAJob[i].jobId.machineId.departmentId.departmentName, faultName:faultsInAJob[i].faultId.faultName, faultCategoryName:faultsInAJob[i].faultId.faultCategoryId.faultCategoryName} )
+    const incompletedJobs = await Solve.find({status:"incomplete"},{jobId:1, _id:0})
+    var faultsInAJobs = []
+    if (incompletedJobs) {
+        for (let j = 0; j < incompletedJobs.length; j++) {
+            const faultsInAJob = await JobFault.find({jobId: incompletedJobs[j].jobId}).populate({ path: 'jobId', populate: { path: 'machineId', populate: { path: 'departmentId' } } }).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
+            for (let i = 0; i < faultsInAJob.length; i++) {
+                faultsInAJobs.push( { _id:faultsInAJob[i].jobId._id, jobId: faultsInAJob[i].jobId.jobId, date: faultsInAJob[i].jobId.date, description: faultsInAJob[i].jobId.description, faultImage: faultsInAJob[i].jobId.faultImage,serialNumber: faultsInAJob[i].jobId.machineId.serialNumber, departmentName: faultsInAJob[i].jobId.machineId.departmentId.departmentName, faultName:faultsInAJob[i].faultId.faultName, faultCategoryName:faultsInAJob[i].faultId.faultCategoryId.faultCategoryName} )
+            }
         }
     }
     res.json({

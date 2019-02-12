@@ -63,9 +63,15 @@ router.post('/accept', async (req, res) => {
 
 //get Assign job Details
 router.get('/technician/:technicianId', async (req, res) => {
-    const assignTechnicianJobs = await AssignTechnician.find({ technicianId: req.params.technicianId }).populate('jobId')
+    const assignTechnicianJobs = await AssignTechnician.find({ technicianId: req.params.technicianId },{jobId:1, date:1, accept:1, _id:0})
+    var jobToDo = []
+    for (let i = 0; i < assignTechnicianJobs.length; i++) {
+        const jobs = await JobFault.findOne({jobId: assignTechnicianJobs[i].jobId}).populate({ path: 'jobId', populate: { path: 'machineId', populate: { path: 'departmentId' } } }).populate({ path: 'faultId', populate: { path: 'faultCategoryId' } })
+        jobToDo.push({jobs, solvedetails: {date:assignTechnicianJobs[i].date,accept:assignTechnicianJobs[i].accept}})
+    }
+
     res.json({
-        assignTechnicianJobs: assignTechnicianJobs
+        assignTechnicianJobs: jobToDo
     })
 })
 
