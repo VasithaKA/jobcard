@@ -12,6 +12,9 @@ const JobFault = mongoose.model('jobFaults');
 require('../../models/Job');
 const Job = mongoose.model('jobs');
 
+require('../../models/relationships/AssignTechnician');
+const AssignTechnician = mongoose.model('assignTechnicians');
+
 //set Job Fault
 router.post('/', async (req, res) => {
     const existingJobFault = await Solve.findOne({ jobId: req.body.jobId, technicianId: req.body.technicianId })
@@ -88,8 +91,19 @@ router.get('/todayComplete', async (req, res) => {
             faultsInAJobs.push(faultDetails)
         }
     }
+    const allJobs = await Job.find({}, { _id: 1 })
+    var pendingJobs = [];
+    for (let i = 0; i < allJobs.length; i++) {
+        const assignTechnicians = await AssignTechnician.findOne({ jobId: allJobs[i]._id })
+        if (!assignTechnicians) {
+            const pendingJob = await Job.findById(allJobs[i]._id, { _id: 1 })
+            pendingJobs.push(pendingJob)
+        }
+    }
     res.json({
-        todayCompletedJobsDetails: faultsInAJobs
+        todayAllJobs: pendingJobs.length,
+        todayCompletedJobs: faultsInAJobs.length,
+        todayIncompletedJobs: todayJobs.length-faultsInAJobs.length
     })
 })
 
