@@ -53,7 +53,7 @@ router.post('/', async (req, res) => {
 
 //complete the job
 router.patch('/setComplete/:jobId', async (req, res) => {
-    await Solve.findOneAndUpdate({ jobId: req.params.jobId }, { $set: { status: "complete" } })
+    await Solve.findOneAndUpdate({ jobId: req.params.jobId }, { $set: { status: "complete", endTime: moment().format()} })
         .then(() => {
             res.json({
                 success: "success"
