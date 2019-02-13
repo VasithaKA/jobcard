@@ -115,7 +115,6 @@ router.get('/todayComplete', async (req, res) => {
 //get incompleted Jobs 
 router.get('/incomplete', async (req, res) => {
     const incompletedJobs = await Solve.find({status:"incomplete"},{jobId:1, _id:0})
-    console.log(incompletedJobs)
     var faultsInAJobs = []
     if (incompletedJobs) {
         for (let j = 0; j < incompletedJobs.length; j++) {
