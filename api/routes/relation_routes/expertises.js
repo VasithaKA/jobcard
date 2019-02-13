@@ -30,3 +30,13 @@ router.post('/', async (req, res) => {
         })
         )
 })
+
+router.get('/expertise/:_id', async (req, res) => {
+    const expert = await Expertise.find({technicianId: req.params._id}).populate('faultCategoryId','faultCategoryName')
+    console.log(expert)
+    res.json({
+        expert
+    })
+})
+
+module.exports = router;

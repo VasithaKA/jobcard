@@ -12,7 +12,7 @@ const EmployeeRole = mongoose.model('employeeRoles');
 
 //Login
 router.post('/', async (req, res) => {
-    const resp = await Employee.findOne({ userName: req.body.userName }).populate('employeeTypeId')
+    const resp = await Employee.findOne({ userName: req.body.userName }).populate('employeeTypeId').populate('departmentId')
     //const resp = await User.findOne({ userName: req.body.userName, password: req.body.password }).populate('employeeTypeId')
     if (!resp) {
         res.json({

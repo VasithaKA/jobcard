@@ -20,6 +20,7 @@ const assignTechnicianRoutes = require('./api/routes/relation_routes/assignTechn
 const jobFaultRoutes = require('./api/routes/relation_routes/jobFaults');
 const solveRoutes = require('./api/routes/relation_routes/solves');
 const loginRoutes = require('./api/routes/login');
+const expertiseRoutes = require('./api/routes/relation_routes/expertises');
 
 app.use(morgan("dev"))
 
@@ -69,6 +70,7 @@ app.use('/api/assignTechnicians', assignTechnicianRoutes);
 app.use('/api/jobFaults', jobFaultRoutes);
 app.use('/api/solves', solveRoutes);
 app.use('/api/login', loginRoutes);
+app.use('/api/expertises', expertiseRoutes);
 
 app.use((req, res, next) => {
     const error = new Error("Not found");
