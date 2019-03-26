@@ -40,8 +40,16 @@ router.get('/', async (req, res) => {
 })
 
 //get a machine details
-router.get('/:_id', async (req, res) => {
+router.get('/machine/:_id', async (req, res) => {
     const machDetails = await Machine.findById(req.params._id).populate('departmentId').populate('supervisorId')
+    res.json({
+        details: machDetails
+    })
+})
+
+//get a machine details using supervisor id
+router.get('/supervisor/:_id', async (req, res) => {
+    const machDetails = await Machine.find({supervisorId: req.params._id}).populate('departmentId')
     res.json({
         details: machDetails
     })

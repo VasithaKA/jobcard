@@ -278,15 +278,30 @@ router.get('/checkUserName/:userName', async (req, res) => {
 
 //change password
 router.patch('/password/:_id', async (req, res) => {
-    bcrypt.hash(req.body.password, 12, (err, hash) => {
-        Employee.findByIdAndUpdate(req.params._id, { $set: { password: hash } })
-            .then(() => {
-                res.json({
-                    success: true,
-                    message: "Password is Change!"
+    if (req.params._id === req.session.user._id) {
+        req.session.destroy()
+        bcrypt.hash(req.body.password, 12, (err, hash) => {
+            Employee.findByIdAndUpdate(req.params._id, { $set: { password: hash } })
+                .then(() => {
+                    res.json({
+                        thisUser: true,
+                        success: true,
+                        message: "Password is Change!, Please log in again."
+                    })
                 })
-            })
-    })
+        })
+    } else {
+        bcrypt.hash(req.body.password, 12, (err, hash) => {
+            Employee.findByIdAndUpdate(req.params._id, { $set: { password: hash } })
+                .then(() => {
+                    res.json({
+                        thisUser: false,
+                        success: true,
+                        message: "Password is Change!"
+                    })
+                })
+        })
+    }
 })
 
 

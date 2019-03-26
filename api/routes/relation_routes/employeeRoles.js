@@ -54,6 +54,14 @@ router.get('/supervisor/', async (req, res) => {
     })
 })
 
+//get employee role for a type
+router.get('/employeeType/:employeeTypeId', async (req, res) => {
+    const setRolesForAType = await EmployeeRole.find({ employeeTypeId: req.params.employeeTypeId, status: true }).populate('roleId', 'roleNumber')
+    res.json({
+        details: setRolesForAType
+    })
+})
+
 //Update employee role details
 // router.patch('/:_id', async (req, res) => {
 //     const existingFaultCategory = await EmployeeRole.findOne({ employeeTypeId: req.params.employeeTypeId, roleId: req.body.roleId })
